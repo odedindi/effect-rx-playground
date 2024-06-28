@@ -14,7 +14,7 @@ const makePool = Worker.makePoolSerialized<Requests>({
   targetUtilization: 0.8,
 }).pipe(Effect.tap(pool => pool.executeEffect(new GetId({ id: "1" }))))
 
-export class Pool extends Context.Tag("app/Pool")<
+export class Pool extends Context.Tag("app/pool")<
   Pool,
   Effect.Effect.Success<typeof makePool>
 >() {
@@ -23,19 +23,16 @@ export class Pool extends Context.Tag("app/Pool")<
   )
 }
 
-// rx
-
+// Rx
 const runtime = Rx.runtime(Pool.Live)
-
 export const getIdRx = runtime.fn((id: string) => {
   console.log("getIdRx", id)
   return Pool.pipe(
     Effect.flatMap(pool =>
       Effect.forEach(
-        Array.range(1, 41),
+        Array.range(1, 41), // create an array of 40 elements, values are integers from 1 to 40
         id =>
           pool.executeEffect(new GetId({ id: id.toString() })).pipe(
-            Effect.tap(Effect.log),
             Effect.annotateLogs({
               rx: "getIdRx",
               id,

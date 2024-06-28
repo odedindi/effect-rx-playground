@@ -1,13 +1,14 @@
-/* eslint-disable require-yield */
 import * as Runner from "@effect/platform/WorkerRunner"
 import * as BrowserRunner from "@effect/platform-browser/BrowserWorkerRunner"
 import { Requests } from "./schema"
 import { Effect, Layer } from "effect"
 
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 Runner.layerSerialized(Requests, {
-  InitialMessage: () =>
-    Effect.gen(function* () {
-      console.log("Hello from worker")
+  InitialMessage: arg =>
+    // eslint-disable-next-line require-yield
+    Effect.gen(function* (fnArg) {
+      console.log("[InitialMessage]: Hello from worker", arg, fnArg)
     }),
-  GetId: ({ id }) => Effect.succeed(id).pipe(Effect.delay(1000)),
+  GetId: ({ id }) => Effect.succeed(id),
 }).pipe(Layer.provide(BrowserRunner.layer), Layer.launch, Effect.runPromise)

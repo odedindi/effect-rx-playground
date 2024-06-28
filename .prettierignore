@@ -1,0 +1,28 @@
+# Ignore node_modules
+node_modules/
+
+# Ignore vite build output
+dist/
+build/
+
+# Ignore React Fast Refresh files
+*.react-refresh
+
+# Ignore vite config files
+vite.config.js
+
+# Ignore IDE settings
+.vscode/
+.idea/
+
+# Ignore editor temp files
+*.tmp
+*.swp
+*.bak
+
+# Ignore log files
+*.log
+
+# Ignore coverage files
+coverage/
+.yarn/

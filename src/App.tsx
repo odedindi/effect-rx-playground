@@ -4,67 +4,73 @@ import {
   useRxSuspenseSuccess,
   useRxValue,
 } from "@effect-rx/rx-react"
-import { Suspense, useState } from "react"
-import "./App.css"
-import * as Todos from "./Todos"
+import { type FC, Suspense, useState } from "react"
+import * as Todos from "./services/todos"
 import { getIdRx } from "./worker/client"
 
-export default function App() {
-  return (
-    <>
-      <WorkerWrap />
-      <h3>Stream list</h3>
-      <Suspense fallback={<p>Loading...</p>}>
-        <TodoStreamList />
-      </Suspense>
-      <PullButton />
-      <br />
-      <PerPageSelect />
-      <h3>Effect list</h3>
-      <Suspense fallback={<p>Loading...</p>}>
-        <TodoEffectList />
-      </Suspense>
-    </>
-  )
-}
+const App: FC = () => (
+  <>
+    <WorkerWrap />
+    <h3>Stream list</h3>
+    <Suspense fallback={<p>Loading...</p>}>
+      <TodoStreamList />
+    </Suspense>
+    <PullButton />
+    <br />
+    <PerPageSelect />
+    <h3>Effect list</h3>
+    <Suspense fallback={<p>Loading...</p>}>
+      <TodoEffectList />
+    </Suspense>
+  </>
+)
+
+export default App
+
+const WaitingOrLoaded: FC<{ waiting?: boolean }> = ({ waiting }) => (
+  <p
+    style={{
+      color: waiting ? "blue" : "green",
+      fontWeight: "bold",
+    }}
+  >
+    {waiting ? "Waiting" : "Loaded"}
+  </p>
+)
 
 const TodoStreamList = () => {
   const result = useRxSuspenseSuccess(Todos.stream)
+
   return (
     <>
-      <div style={{ textAlign: "left" }}>
-        {result.value.items.map(todo => (
-          <Todo key={todo.id} todo={todo} />
-        ))}
-      </div>
-      <p>{result.waiting ? "Waiting" : "Loaded"}</p>
+      {result.value.items.map(todo => (
+        <Todo key={todo.id} todo={todo} />
+      ))}
+      <WaitingOrLoaded waiting={result.waiting} />
     </>
   )
 }
 
-const TodoEffectList = () => {
-  const todos = useRxSuspenseSuccess(Todos.effect).value
+const TodoEffectList: FC = () => {
+  const result = useRxSuspenseSuccess(Todos.effect)
   return (
     <>
-      <div style={{ textAlign: "left" }}>
-        {todos.map(todo => (
-          <Todo key={todo.id} todo={todo} />
-        ))}
-      </div>
+      {result.value.map(todo => (
+        <Todo key={todo.id} todo={todo} />
+      ))}
+      <WaitingOrLoaded waiting={result.waiting} />{" "}
     </>
   )
 }
 
-function Todo({ todo }: { readonly todo: Todos.Todo }) {
-  return (
-    <p>
-      <input checked={todo.completed} type="checkbox" disabled />
-      &nbsp;{todo.title}
-    </p>
-  )
-}
+const Todo: FC<{ readonly todo: Todos.Todo }> = ({ todo }) => (
+  <p style={{ textAlign: "left" }}>
+    <input checked={todo.completed} type="checkbox" disabled />
+    &nbsp;{todo.title}
+  </p>
+)
 
-const PullButton = () => {
+const PullButton: FC = () => {
   const pull = useRxSet(Todos.stream)
   const done = useRxValue(Todos.streamIsDone)
   return (
@@ -74,36 +80,34 @@ const PullButton = () => {
   )
 }
 
-const PerPageSelect = () => {
+const PerPageSelect: FC = () => {
   const [n, set] = useRx(Todos.perPage)
   return (
-    <>
-      <label>
-        Per page:
-        <select value={n} onChange={e => set(Number(e.target.value))}>
-          <option value={5}>5</option>
-          <option value={10}>10</option>
-          <option value={20}>20</option>
-          <option value={55}>55</option>
-        </select>
-      </label>
-    </>
+    <label>
+      Per page:
+      <select value={n} onChange={({ target }) => set(Number(target.value))}>
+        <option value={5}>5</option>
+        <option value={10}>10</option>
+        <option value={20}>20</option>
+        <option value={50}>50</option>
+      </select>
+    </label>
   )
 }
 
-function WorkerWrap() {
+const WorkerWrap: FC = () => {
   const [mount, setMount] = useState(false)
   return (
     <>
-      <button onClick={() => setMount(_ => !_)}>
+      <button onClick={() => setMount(prev => !prev)}>
         {mount ? "Stop" : "Start"} worker
       </button>
-      {mount && <WorkerButton />}
+      {mount ? <WorkerButton /> : null}
     </>
   )
 }
 
-function WorkerButton() {
+const WorkerButton: FC = () => {
   const getById = useRxSet(getIdRx)
-  return <button onClick={() => getById("123")}>Get ID from worker</button>
+  return <button onClick={() => getById("2")}>Get ID from worker</button>
 }
